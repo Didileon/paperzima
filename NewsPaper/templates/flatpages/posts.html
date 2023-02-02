@@ -1,0 +1,92 @@
+{% extends 'flatpages/default.html' %}
+
+{% load custom_filters %}
+{% load custom_tags %}
+
+{% block title %}
+Posts
+{% endblock title %}
+
+{% block content %}
+    <h1>Все новости</h1>
+
+    <br>
+    <hr>
+
+
+{# Теперь будем проверять не request.user.is_authenticated, а конкретные права #}
+    {% if perms.news.add_post %}
+    <a href="{% url 'post_create' %}">Создать</a>
+    {% endif %}
+
+    <br>
+    <br>
+    {% if posts %}
+        <table>
+            <tr>
+                <td>Новость</td>
+                <td>Описание</td>
+                <td>Подробнее</td>
+                <td>Дата публикации</td>
+
+                {# Условие получается составным. #}
+                {% if perms.news.change_post or perms.news.delete_post %}
+                <td>Действия</td>
+                {% endif %}
+
+
+            </tr>
+            {% for post in posts %}
+            <tr>
+                <td>{{ post.title|truncatechars:20 }}</td>
+                <td>{{ post.text|censor|truncatechars:20 }}</td>
+                <td><a href="post/{{ post.id }}"> Подробнее </a></td>
+                <td>{{ post.dateCreation | date:'d M. Y' }}</td>
+
+                <td>
+                    {# А здесь доступ для каждой ссылки теперь будем проверять отдельно #}
+                    {% if perms.news.change_post %}
+                    <a href="{% url 'post_edit' pk=post.id %}">Изменить</a>
+                    {% endif %}
+                    {% if perms.news.delete_post %}
+                    <a href="{% url 'post_delete' post.id %}">Удалить</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+
+</table>
+{% else %}
+<h2>Новостей нет!</h2>
+{% endif %}
+
+{% if page_obj.has_previous %}
+       <a href="?{% url_replace page=1 %}">1</a>
+       {% if page_obj.previous_page_number != 1 %}
+           ...
+           <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+       {% endif %}
+   {% endif %}
+
+
+   {{ page_obj.number }}
+
+
+   {% if page_obj.has_next %}
+       <a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+       {% if paginator.num_pages != page_obj.next_page_number %}
+           ...
+           <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
+       {% endif %}
+   {% endif %}
+
+     <hr>
+
+    <a href="http://127.0.0.1:8000/posts/search/"><button>Найти</button></a> &nbsp;&nbsp;&nbsp;
+    <a href="http://127.0.0.1:8000/posts/create"><button>Создать</button></a> &nbsp;&nbsp;&nbsp;
+
+
+<br><br><br>
+
+
+{% endblock content %}
